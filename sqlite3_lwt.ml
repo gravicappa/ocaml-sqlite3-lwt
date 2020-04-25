@@ -67,13 +67,20 @@ let to_array stmt =
 
 let batch_sql db sql ?(busy_num_tries = !busy_num_tries)
               ?(busy_wait_s = !busy_wait_s) () =
+  let is_string_prefix prefix str =
+    String.length str > String.length prefix
+    && (String.sub str 0 (String.length prefix)) = prefix in
+
+  let is_empty_err str = is_string_prefix "No code compiled from" str in
+
   let exec stmt = single ~busy_num_tries ~busy_wait_s stmt ignore_result in
   let next stmt =
     Lwt.finalize (fun () ->
       let%lwt _ = exec stmt in
       match Sqlite3.prepare_tail stmt with
       | Some stmt -> Lwt.return (Some stmt)
-      | None -> Lwt.return_none)
+      | None -> Lwt.return_none
+      | exception Sqlite3.Error msg when is_empty_err msg -> Lwt.return_none)
     (fun () ->
       let _ = Sqlite3.finalize stmt in
       Lwt.return_unit) in

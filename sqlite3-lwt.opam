@@ -3,5 +3,6 @@ version: "0.1"
 maintainer: "Ramil Farkhshatov <ramil.fh@ya.ru>"
 authors: ["Ramil Farkhshatov"]
 license: "LGPL-3 with OCaml linking exception"
-build: ["dune" "build" "--only" "pluk-http" "--root" "." "-j" jobs "@install"]
+build: ["dune" "build" "--only" "sqlite3-lwt" "--root" "." "-j" jobs "@install"]
 depends: ["sqlite3" "lwt"]
+synopsis: "Lwt wrapper for sqlite3"
