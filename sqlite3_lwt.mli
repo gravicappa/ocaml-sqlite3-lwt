@@ -57,10 +57,15 @@ val with_statement:
     *)
 
 val with_transaction:
-  Sqlite3.db -> Lwt_mutex.t -> transaction -> (unit -> 'a Lwt.t) -> 'a Lwt.t
+  Sqlite3.db ->
+  Lwt_mutex.t ->
+  transaction ->
+  (unit -> ('a, 'e) Lwt_result.t) ->
+  ('a, 'e) Lwt_result.t
 (** [with_transaction db mutex transaction proc] starts transaction of type
     [transaction], then calls [proc] committing the transaction after it
-    returns and canceling it after it raises an exception. *)
+    returns [Ok _] and canceling it after it returns [Error _} or raises an
+    exception. *)
 
 val single_sql:
   Sqlite3.db ->
