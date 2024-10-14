@@ -136,15 +136,18 @@ let with_transaction db mutex behaviour proc =
     | Immediate -> "BEGIN IMMEDIATE TRANSACTION"
     | Deferred -> "BEGIN DEFERRED TRANSACTION"
     | Exclusive -> "BEGIN EXCLUSIVE TRANSACTION" in
+
+  let exec db sql = single_sql db sql ignore_result |> Lwt.map ignore in
+
   Lwt_mutex.with_lock mutex @@ fun () ->
-    let _ = Sqlite3.exec db (start_sql behaviour) in
+    let%lwt () = exec db (start_sql behaviour) in
     match%lwt proc () with
     | Ok _ as ok ->
-        let _ = Sqlite3.exec db "COMMIT TRANSACTION" in
+        let%lwt () = exec db "COMMIT TRANSACTION" in
         Lwt.return ok
     | Error _ as error ->
-        let _ = Sqlite3.exec db "ROLLBACK TRANSACTION" in
+        let%lwt () = exec db "ROLLBACK TRANSACTION" in
         Lwt.return error
     | exception exn ->
-        let _ = Sqlite3.exec db "ROLLBACK TRANSACTION" in
+        let%lwt () = exec db "ROLLBACK TRANSACTION" in
         Lwt.fail exn
